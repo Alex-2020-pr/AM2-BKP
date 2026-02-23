@@ -345,6 +345,89 @@
             border-top: 1px solid #dde5ef;
         }
 
+        /* Modal simples para captura de dados */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-container {
+            background: white;
+            padding: 2rem;
+            border-radius: 24px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+        }
+
+        .modal-container h3 {
+            font-size: 1.8rem;
+            color: #0b1c2f;
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-container p {
+            color: #3e5570;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border: 2px solid #e2e9f2;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: border 0.2s;
+        }
+
+        .modal-input:focus {
+            outline: none;
+            border-color: #f80;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 1rem;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .modal-btn-primary {
+            background: #f80;
+            color: #0b1c2f;
+        }
+
+        .modal-btn-primary:hover {
+            background: #ffaa33;
+        }
+
+        .modal-btn-secondary {
+            background: #eef2f6;
+            color: #3e5570;
+        }
+
+        .modal-btn-secondary:hover {
+            background: #dde5ef;
+        }
+
         @media (max-width: 800px) {
             .grid-2, .grid-3, .grid-4 {
                 grid-template-columns: 1fr;
@@ -379,6 +462,24 @@
     </style>
 </head>
 <body>
+    <!-- Modal para captura de dados -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <h3>Agendar reunião</h3>
+            <p>Preencha seus dados para que nosso consultor entre em contato via WhatsApp.</p>
+            
+            <input type="text" class="modal-input" id="nome" placeholder="Seu nome completo" required>
+            <input type="text" class="modal-input" id="empresa" placeholder="Nome da empresa" required>
+            <input type="tel" class="modal-input" id="telefone" placeholder="Seu telefone com DDD" required>
+            <input type="email" class="modal-input" id="email" placeholder="Seu e-mail" required>
+            
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-secondary" onclick="fecharModal()">Cancelar</button>
+                <button class="modal-btn modal-btn-primary" onclick="enviarWhatsApp()">Enviar</button>
+            </div>
+        </div>
+    </div>
+
     <div class="proposal-container">
         <!-- HEADER -->
         <div class="header-enterprise">
@@ -628,7 +729,7 @@
             </div>
 
             <div style="text-align: center;">
-                <button class="btn-contratar" onclick="alert('Em breve nosso consultor especialista entrará em contato para validar RTO e necessidades específicas.')">
+                <button class="btn-contratar" onclick="abrirModal()">
                     <i class="fas fa-calendar-check"></i> AGENDAR REUNIÃO TÉCNICA
                 </button>
             </div>
@@ -639,5 +740,92 @@
             </div>
         </footer>
     </div>
+
+    <script>
+        // Função para abrir o modal
+        function abrirModal() {
+            document.getElementById('modalOverlay').style.display = 'flex';
+        }
+
+        // Função para fechar o modal
+        function fecharModal() {
+            document.getElementById('modalOverlay').style.display = 'none';
+            // Limpar campos
+            document.getElementById('nome').value = '';
+            document.getElementById('empresa').value = '';
+            document.getElementById('telefone').value = '';
+            document.getElementById('email').value = '';
+        }
+
+        // Função para enviar para o WhatsApp
+        function enviarWhatsApp() {
+            // Obter valores dos campos
+            const nome = document.getElementById('nome').value.trim();
+            const empresa = document.getElementById('empresa').value.trim();
+            const telefone = document.getElementById('telefone').value.trim();
+            const email = document.getElementById('email').value.trim();
+
+            // Validar campos
+            if (!nome || !empresa || !telefone || !email) {
+                alert('Por favor, preencha todos os campos!');
+                return;
+            }
+
+            // Validar telefone (mínimo 10 dígitos com DDD)
+            const telefoneLimpo = telefone.replace(/\D/g, '');
+            if (telefoneLimpo.length < 10 || telefoneLimpo.length > 11) {
+                alert('Por favor, insira um telefone válido com DDD (ex: 41999999999)');
+                return;
+            }
+
+            // Validar email básico
+            if (!email.includes('@') || !email.includes('.')) {
+                alert('Por favor, insira um e-mail válido!');
+                return;
+            }
+
+            // Número do WhatsApp da AM2 (substitua pelo número correto)
+            const numeroWhatsApp = '5545998607211'; // Formato: código do país + DDD + número (sem espaços ou caracteres)
+
+            // Montar mensagem
+            const mensagem = `Olá! Gostaria de agendar uma reunião técnica para conhecer melhor o AM2 Backup.
+
+*Dados para contato:*
+👤 Nome: ${nome}
+🏢 Empresa: ${empresa}
+📱 Telefone: ${telefone}
+📧 E-mail: ${email}
+
+*Interesse:* Proposta comercial apresentada - Backup Corporativo OCI`;
+
+            // Codificar mensagem para URL
+            const mensagemCodificada = encodeURIComponent(mensagem);
+
+            // Criar link do WhatsApp
+            const linkWhatsApp = `https://wa.me/${numeroWhatsApp}?text=${mensagemCodificada}`;
+
+            // Fechar modal
+            fecharModal();
+
+            // Redirecionar para o WhatsApp
+            window.open(linkWhatsApp, '_blank');
+        }
+
+        // Fechar modal se clicar fora dele
+        document.getElementById('modalOverlay').addEventListener('click', function(e) {
+            if (e.target === this) {
+                fecharModal();
+            }
+        });
+
+        // Permitir enviar com Enter
+        document.querySelectorAll('.modal-input').forEach(input => {
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    enviarWhatsApp();
+                }
+            });
+        });
+    </script>
 </body>
 </html>
